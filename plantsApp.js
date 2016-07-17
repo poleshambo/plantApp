@@ -1,3 +1,5 @@
+var elem = document.getElementById("content");
+
 function app() {
     // does initial startup check of all flowers
        initialCheck();
@@ -8,6 +10,19 @@ function app() {
  }
  
 var flowers = [];             // array of flowers objects 
+
+
+function Pot(name, minwt, maxwt, wf ) {
+    this.name = name;
+    this.lastWaterTime = new Date().toString();
+    this.minWaterTime = minwt;
+    this.maxWaterTime = maxwt;
+    this.waterFrequency = wf;
+    this.live = 2;
+}
+
+
+
 
 
 function initialCheck() {
@@ -48,6 +63,7 @@ function initialCheck() {
                 message(3, i)
             }   
             if (flowers[i].live == 0) {
+                alert("Flower" + flowers[i].name + " is dead now. We are sorry)")
                 message(3, i);
             }
             else continue;
@@ -56,9 +72,18 @@ function initialCheck() {
     }
 
 
-function water(name) {
+function water() {
     // find flower by id and changes lastWaterTime to current, 
     // increments min and max water times by waterFrequency
+    var name;    
+    var radios = document.getElementsByName('group1');
+
+    for (var i= 0; i<radios.length; i++){
+        if (radios[i].checked){
+            name = radios[i].value;
+        }
+    }
+    
     var now = new Date();
     
     for (var i = 0; i < flowers.length; i++) {
@@ -66,6 +91,7 @@ function water(name) {
             if (flowers[i].lastWaterTime < flowers[i].minWaterTime){
                 flowers[i].live = flowers[i].live - 1;
                 //console.log("be careful -1 live");
+                alert("Flower " + flowers[i].name + ' doesnt need water , be careful. It has only ' + flowers[i].live + ' lifes left ')
                 message(2, i);
             }
             
@@ -82,11 +108,13 @@ function water(name) {
 
 function savePlants() {   // save plants to localStorage
     localStorage["flowers"] = JSON.stringify(flowers);
+    viewPlants(flowers);
     console.log(JSON.stringify(flowers));
 };
 
 function loadPlants() {
      flowers = JSON.parse(localStorage["flowers"]);
+     viewPlants(flowers);
      console.log(JSON.parse(localStorage["flowers"]));
 };
 
@@ -99,7 +127,7 @@ function addPlant() {
         waterFrequency = prompt('Enter NUMBER of watering frequency', '');
     }
     waterFrequency = waterFrequency * 3600000;
-    var watered = confirm('Water this plant and lick OK');
+    var watered = confirm('Water this plant and click OK');
     var minWaterTimeTemp;
     var maxWaterTimeTemp;
     
@@ -107,15 +135,14 @@ function addPlant() {
         minWaterTimeTemp = new Date(Date.parse(now) + waterFrequency).toString();
         maxWaterTimeTemp = new Date(Date.parse(minWaterTimeTemp) + waterFrequency).toString();
     }
+    
+     var newPot = new Pot(nameTemp, minWaterTimeTemp, maxWaterTimeTemp, waterFrequency);
+    
+    flowers.push(newPot);
 
-    flowers.push({name: nameTemp, 
-                  lastWaterTime: new Date(), 
-                  minWaterTime: minWaterTimeTemp,
-                  maxWaterTime: maxWaterTimeTemp,
-                  waterFrequency: waterFrequency,
-                  live: 2
-    });
     console.log("Successfully added new plant " + nameTemp);
+    
+    viewPlants(flowers);
 }
 
 function showPlants() {
@@ -123,9 +150,19 @@ function showPlants() {
     for (var i = 0; i < flowers.length; i++) {
         console.log(flowers[i]);
     }
+    viewPlants(flowers);
 }
 
-function deletePlant(name){
+function deletePlant(){
+    var name;    
+    var radios = document.getElementsByName('group1');
+
+    for (var i= 0; i<radios.length; i++){
+        if (radios[i].checked){
+            name = radios[i].value;
+        }
+    }
+    
     var id;
     for (var i = 0; i < flowers.length; i++) {
         if (name == flowers[i].name) {
@@ -133,6 +170,7 @@ function deletePlant(name){
         }
     }
     flowers.splice(id,1); 
+    viewPlants(flowers);
 }
 
 function message(mssgId, id, time){
@@ -163,3 +201,28 @@ function message(mssgId, id, time){
 
 
 app();
+
+
+viewPlants(flowers);
+
+function viewPlants(arr) {
+    var tempHTML = '';
+    
+    for (var i=0; i<arr.length; i++) {
+        
+        tempHTML += '<div id="' + [i] + '" class="alldivs">';
+        tempHTML += '<input type="radio" name="group1" value="' + arr[i].name +'">';
+        tempHTML += '<span>' + 'Flower name ' +arr[i].name + '</span>';
+        tempHTML += '<span>' + ' Last watered at ' + arr[i].lastWaterTime + '</span>';
+        tempHTML += '<span>' + ' Should be watered before ' + arr[i].maxWaterTime + '</span>';
+        tempHTML += '<span>' + ' Do not water until ' + arr[i].minWaterTime + '</span>';
+        tempHTML += '<span>' + ' Lives remaining ' + arr[i].live + '</span>';
+        tempHTML += '<span>' + ' Watering frequency every ' + (arr[i].waterFrequency/3600000) + ' hours ' + '</span>';
+        tempHTML += '</div>';
+    }
+    console.log(tempHTML);
+    document.getElementById("content").innerHTML = tempHTML;
+}
+
+
+
